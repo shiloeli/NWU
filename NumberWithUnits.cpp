@@ -7,7 +7,7 @@ using namespace std;
 
 namespace ariel{
             
-            unordered_map<string,unordered_map<string,double>> units_map;
+           static unordered_map<string,unordered_map<string,double>> units_map;
 
             void NumberWithUnits::check_valid_operator(const string &unit1, const string &unit2){
                 if(units_map.count(unit1)==0||units_map.count(unit2)==0){
@@ -30,14 +30,14 @@ namespace ariel{
             void NumberWithUnits::update_unit_map(string& unit1, string& unit2){
                 for(const auto& dict: units_map[unit1]) {     
                     if(unit2!=dict.first){
-                        units_map[unit2][dict.first] = units_map[unit2][unit1] * dict.second;
-                        units_map[dict.first][unit2] = 1 / (units_map[unit2][unit1] * dict.second);
+                        units_map[unit2][dict.first] = dict.second * units_map[unit2][unit1];
+                        units_map[dict.first][unit2] = 1 / (dict.second * units_map[unit2][unit1]);
                     }
                 }
                 for(const auto& dict: units_map[unit2]) {
                     if(unit1!=dict.first){
-                        units_map[unit1][dict.first] = units_map[unit1][unit2] * dict.second;
-                        units_map[dict.first][unit1] = 1 / (units_map[unit1][unit2] * dict.second);
+                        units_map[unit1][dict.first] = dict.second * units_map[unit1][unit2];
+                        units_map[dict.first][unit1] = 1 / (dict.second * units_map[unit1][unit2]);
                     }
                 }
             }
@@ -156,7 +156,7 @@ namespace ariel{
             }
             
             bool NumberWithUnits::operator==(const NumberWithUnits& var1)const{
-                const double eps = 0.001;
+                const double eps = 0.000001;
                 NumberWithUnits::check_valid_operator(this->unit, var1.unit);
                 if(this->unit == var1.unit){
                     return(abs(this->num-var1.num)<eps);
@@ -198,23 +198,23 @@ namespace ariel{
 
             istream& operator>>(istream& in, NumberWithUnits& var){
                 string word;
-                char tav=0;
+                char character=0;
                 double var_num = 0.0;
 
-                while(in>>tav){
-                    if(tav=='['){
+                while(in>>character){
+                    if(character=='['){
                         var_num = stod(word);
                         word = "";
-                        in>>tav;
+                        in>>character;
                     }
 
-                    if(tav == ']'){
+                    if(character == ']'){
                         NumberWithUnits::check_unit_integrity(word);
                         var.num = var_num;
                         var.unit = word;
                         return in;
                     }
-                    word += tav;
+                    word += character;
                 }
                 return in;
             }
